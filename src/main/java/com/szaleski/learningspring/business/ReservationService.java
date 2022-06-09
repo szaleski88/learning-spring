@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.szaleski.learningspring.data.Guest;
@@ -24,7 +23,6 @@ public class ReservationService {
     private final GuestRepository guestRepository;
     private final ReservationRepository reservationRepository;
 
-    @Autowired
     public ReservationService(RoomRepository roomRepository, GuestRepository guestRepository, ReservationRepository reservationRepository) {
         this.roomRepository = roomRepository;
         this.guestRepository = guestRepository;
@@ -55,17 +53,42 @@ public class ReservationService {
         for (Long id : roomReservationMap.keySet()) {
             roomReservations.add(roomReservationMap.get(id));
         }
-        roomReservations.sort(new Comparator<RoomReservation>() {
-
-            @Override
-            public int compare(RoomReservation o1, RoomReservation o2) {
-                if (o1.getRoomName().equals(o2.getRoomName())) {
-                    return o1.getRoomNumber().compareTo(o2.getRoomNumber());
-                }
-                return o1.getRoomName().compareTo(o2.getRoomName());
+        roomReservations.sort((o1, o2) -> {
+            if (o1.getRoomName().equals(o2.getRoomName())) {
+                return o1.getRoomNumber().compareTo(o2.getRoomNumber());
             }
+            return o1.getRoomName().compareTo(o2.getRoomName());
         });
         return roomReservations;
+    }
+
+    public List<Guest> getHotelGuests() {
+        List<Guest> guests = this.guestRepository.findAll();
+        guests.sort((o1, o2) -> {
+            if (o1.getLastName().equals(o2.getLastName())) {
+                return o1.getFirstName().compareTo(o2.getFirstName());
+            }
+            return o1.getLastName().compareTo(o2.getLastName());
+        });
+
+        return guests;
+    }
+
+    public void addGuest(Guest guest) {
+        if (guest == null) {
+            throw new RuntimeException("Guest cannot be null");
+        }
+        guestRepository.save(guest);
+    }
+
+    public List<Room> getRooms() {
+        Iterable<Room> allRooms = roomRepository.findAll();
+        List<Room> roomList = new ArrayList<>();
+        allRooms.forEach(roomList::add);
+
+        roomList.sort(Comparator.comparing(Room::getRoomNumber));
+
+        return roomList;
     }
 }
 
